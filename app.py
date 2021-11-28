@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify, flash
+from flask import Flask, request, render_template, jsonify, flash, session
 from werkzeug.utils import redirect
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey
@@ -18,9 +18,14 @@ def home_page():
     num = 0
     return render_template("home.html", surveyname = surveyname, num = num, survey_length=survey_length)
     
+@app.route('/start', methods=['POST'])
+def start_survey():
+    session['responses'] = []
+    return redirect('/questions/0')
+
 @app.route('/questions/<int:q_num>')
 def question_one(q_num):
-    
+    responses = session['responses']
     if len(responses) >= 4:
         flash('You have completed the survey', "success")
         return redirect('/thankyou')
@@ -45,7 +50,12 @@ def question_one(q_num):
 @app.route('/answers', methods=['POST'])
 def post_answers():
     ans = request.form['question']
+    responses = session['responses']
+    print(len(responses))
+    
     responses.append(ans)
+    session['responses'] = responses
+    print(responses)
     num = len(responses)
 
     return redirect('/questions/' + str(num))
